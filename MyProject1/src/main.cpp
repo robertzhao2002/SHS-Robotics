@@ -15,12 +15,13 @@
 using namespace vex;
 
 vex::competition Competition;
-vex::motor LF = vex::motor(vex :: PORT11);
-vex::motor RF = vex::motor(vex :: PORT20, true);
-vex::motor LB = vex::motor(vex :: PORT12);
-vex::motor RB = vex::motor(vex :: PORT19, true);
-vex::motor lift = vex::motor(vex :: PORT10);
-vex::motor claw = vex::motor(vex :: PORT1);
+vex::motor LF = vex::motor(vex :: PORT2);
+vex::motor RF = vex::motor(vex :: PORT10, true);
+vex::motor LB = vex::motor(vex :: PORT11);
+vex::motor RB = vex::motor(vex :: PORT20, true);
+vex::motor liftleft = vex::motor(vex :: PORT2);
+vex::motor liftright = vex::motor(vex :: PORT9, true);
+vex::motor claw = vex::motor(vex :: PORT19);
 vex::controller Controller1 = vex::controller();
 
 const double DEADZONE = 0.02;
@@ -74,20 +75,24 @@ void leftright(void)
 
 void lifter(void)
 {
-  lift.spin(vex::directionType::fwd, Controller1.Axis3.position(), vex::velocityUnits::pct);
+  liftleft.spin(vex::directionType::fwd, Controller1.Axis3.position(), vex::velocityUnits::pct);
+  liftright.spin(vex::directionType::fwd, Controller1.Axis3.position(), vex::velocityUnits::pct);
 }
 
 void openclaw(void)
 {
-  claw.spin(vex::directionType::fwd, 50, vex::velocityUnits::pct);
+  claw.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
 }
 
 void closeclaw(void)
 {
-  claw.spin(vex::directionType::rev, 50, vex::velocityUnits::pct);
+  claw.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
 }
 
-
+void stopclaw(void)
+{
+  claw.stop();
+}
 
 void stopallmotors(void)
 {
@@ -95,7 +100,8 @@ void stopallmotors(void)
   LB.stop();
   RF.stop();
   RB.stop();
-  lift.stop();
+  liftleft.stop();
+  liftright.stop();
   claw.stop();
 }
 
@@ -136,16 +142,18 @@ void usercontrol (void)
       //Controller1.Axis1.changed(leftright); //turn left and right
       drive();
       Controller1.Axis3.changed(lifter);
-      if(Controller1.ButtonRight.pressing())
+      if(Controller1.ButtonR1.pressing() || Controller1.ButtonR2.pressing())
       {
         closeclaw();
       }
-      else if(Controller1.ButtonLeft.pressing())
+      else if(Controller1.ButtonL1.pressing() || Controller1.ButtonL2.pressing())
       {
         openclaw();
       }
-      Controller1.ButtonLeft.released(stopallmotors);
-      Controller1.ButtonRight.released(stopallmotors);
+      Controller1.ButtonL1.released(stopclaw);
+      Controller1.ButtonL2.released(stopclaw);
+      Controller1.ButtonR2.released(stopclaw);
+      Controller1.ButtonR1.released(stopclaw);
       //Turn left and right
       //LF.spin(vex::directionType::rev, Controller1.ButtonLeft.pressing(), vex::velocityUnits::pct);
       //RF.spin(vex::directionType::fwd, Controller1.ButtonLeft.pressing(), vex::velocityUnits::pct);

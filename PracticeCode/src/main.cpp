@@ -19,6 +19,8 @@ vex::motor RF = vex::motor(vex :: PORT1, true);
 vex::motor LB = vex::motor(vex :: PORT20);
 vex::motor RB = vex::motor(vex :: PORT10, true);
 vex::controller Controller1 = vex::controller();
+vex::inertial InertialSensor = vex::inertial(vex:: PORT19);
+inertial::quaternion  Inertial_quaternion;
 vex::competition Competition;
 
 
@@ -64,20 +66,7 @@ void autonomous (void)
   double derivative = 0;
   double integralmax = 10.0;
   double previous_error = 0;
-  
-  while(error < 0.05)
-  {
-    spin_motors(70, 70);
-  }
-  /*while(RangeFinderA.distance(inches) > 10)
-  {
-    spin_motors(70, 100);
-  }*/
-
-  /*while(RangeFinderA.distance(inches) < 10)
-  {
-    spin_motors(100, 70);
-  }*/
+  double dt = 0.5;
   double distanceTravelled = 0;
   while(distanceTravelled < 50)
   {
@@ -95,8 +84,24 @@ void autonomous (void)
     previous_error = error;
     double speed = kp * error + ki * integral;
     spin_motors(speed, speed);
-    distanceTravelled += speed;
+    distanceTravelled += speed*dt;
   }
+
+  while(fabs(error) < 0.05)
+  {
+    spin_motors(70, 70);
+  }
+
+  
+  /*while(RangeFinderA.distance(inches) > 10)
+  {
+    spin_motors(70, 100);
+  }*/
+
+  /*while(RangeFinderA.distance(inches) < 10)
+  {
+    spin_motors(100, 70);
+  }*/ 
 }
 
 void lifter(void)
@@ -124,6 +129,53 @@ void stopallmotors(void)
   RB.stop();
   //lift.stop();
   //claw.stop();
+}
+
+void calibrateInertial()
+{
+  InertialSensor.calibrate();
+}
+
+void printInertialInfo()
+{
+  
+  Inertial_quaternion = InertialSensor.orientation();
+
+  Brain.Screen.clearScreen();        
+
+  Brain.Screen.setFont( mono15 );
+  Brain.Screen.setPenColor( white );
+  Brain.Screen.setFillColor( black );
+  
+  Brain.Screen.printAt( 20,  30, "GX  %8.3f", InertialSensor.gyroRate( xaxis, dps ) );
+  Brain.Screen.printAt( 20,  45, "GY  %8.3f", InertialSensor.gyroRate( yaxis, dps ) );
+  Brain.Screen.printAt( 20,  60, "GZ  %8.3f", InertialSensor.gyroRate( zaxis, dps ) );
+
+  Brain.Screen.printAt( 20,  90, "AX  %8.3f", InertialSensor.acceleration( xaxis ) );
+  Brain.Screen.printAt( 20, 105, "AY  %8.3f", InertialSensor.acceleration( yaxis ) );
+  Brain.Screen.printAt( 20, 120, "AZ  %8.3f", InertialSensor.acceleration( zaxis ) );
+
+  Brain.Screen.printAt( 20, 150, "A   %8.3f", Inertial_quaternion.a );
+  Brain.Screen.printAt( 20, 165, "B   %8.3f", Inertial_quaternion.b );
+  Brain.Screen.printAt( 20, 180, "C   %8.3f", Inertial_quaternion.c );
+  Brain.Screen.printAt( 20, 195, "D   %8.3f", Inertial_quaternion.d );
+
+  Brain.Screen.printAt( 150, 30, "Roll     %7.2f", InertialSensor.roll() );
+  Brain.Screen.printAt( 150, 45, "Pitch    %7.2f", InertialSensor.pitch() );
+  Brain.Screen.printAt( 150, 60, "Yaw      %7.2f", InertialSensor.yaw() );
+
+  Brain.Screen.printAt( 150, 90, "Heading  %7.2f", InertialSensor.heading() );
+  Brain.Screen.printAt( 150,105, "Rotation %7.2f", InertialSensor.rotation() );
+
+  if( InertialSensor.isCalibrating() )
+    Brain.Screen.printAt( 20,225, "Calibration  In Progress" );
+  else
+    Brain.Screen.printAt( 20,225, "Calibration  Done" );
+
+  Brain.Screen.render();
+
+  // Allow other tasks to run
+  this_thread::sleep_for(10);
 }
 
 void drive(void)
@@ -154,15 +206,17 @@ void drive(void)
       cur_lp = lp;
       cur_rp = rp;
   }
+  printInertialInfo();
 }
 
 void usercontrol (void)
 {
+    calibrateInertial();
     while(1)
     {
       //Controller1.Axis2.changed(forwardbackward); //drive forward and backward
       //Controller1.Axis1.changed(leftright); //turn left and right
-      
+      Controller1.Screen.clearScreen();
       drive();
       //Brain.Screen.print(ultrasonic.distance(mm));
       Controller1.Axis3.changed(lifter);
