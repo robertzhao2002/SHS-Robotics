@@ -15,7 +15,7 @@
 using namespace vex;
 
 vex::competition Competition;
-vex::motor LF = vex::motor(vex :: PORT2);
+vex::motor LF = vex::motor(vex :: PORT1);
 vex::motor RF = vex::motor(vex :: PORT10, true);
 vex::motor LB = vex::motor(vex :: PORT11);
 vex::motor RB = vex::motor(vex :: PORT20, true);
@@ -50,27 +50,6 @@ double scalejoystick(double input)
     return 0.;
   }
 	return result;
-}
-
-void autonomous (void)
-{
-
-}
-
-void forwardbackward(void)
-{
-  LF.spin(vex::directionType::fwd, Controller1.Axis2.position(), vex::velocityUnits::pct);
-  RF.spin(vex::directionType::fwd, Controller1.Axis2.position(), vex::velocityUnits::pct);
-  LB.spin(vex::directionType::fwd, Controller1.Axis2.position(), vex::velocityUnits::pct);
-  RB.spin(vex::directionType::fwd, Controller1.Axis2.position(), vex::velocityUnits::pct);
-}
-
-void leftright(void)
-{
-  LF.spin(vex::directionType::fwd, Controller1.Axis1.position(), vex::velocityUnits::pct);
-  RF.spin(vex::directionType::rev, Controller1.Axis1.position(), vex::velocityUnits::pct);
-  LB.spin(vex::directionType::fwd, Controller1.Axis1.position(), vex::velocityUnits::pct);
-  RB.spin(vex::directionType::rev, Controller1.Axis1.position(), vex::velocityUnits::pct);
 }
 
 void lifter(void)
@@ -132,6 +111,15 @@ void drive(void)
       cur_lp = lp;
       cur_rp = rp;
   }
+}
+
+void autonomous(void)
+{
+  /*for(int i = 0; i < 2; i++)
+  {
+    leftmotors[i].spin(fwd, 100, velocityUnits::pct);
+    rightmotors[i].spin(fwd, 100, velocityUnits::pct);
+  }*/
 }
 
 void usercontrol (void)
